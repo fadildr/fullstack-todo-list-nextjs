@@ -1,4 +1,5 @@
 "use client";
+
 import React from "react";
 import { Formik, Field, Form, ErrorMessage } from "formik";
 import * as Yup from "yup";
@@ -29,7 +30,7 @@ const initialValues = {
   assignedUserId: "",
   status: "NOT_STARTED",
 };
-const { isLead } = useUserContext();
+
 export const Modal: React.FC<ModalProps> = ({
   isOpen,
   onClose,
@@ -38,7 +39,7 @@ export const Modal: React.FC<ModalProps> = ({
   users,
 }) => {
   const formInitialValues = { ...initialValues, ...initialData };
-
+  const { isLead } = useUserContext();
   const handleSubmit = (values: any) => {
     onSubmit(values);
     onClose();

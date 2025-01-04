@@ -94,6 +94,7 @@ const tasks = async (data: Record<string, any>) => {
 };
 
 const updateTask = async (data: any) => {
+  console.log(data);
   try {
     const response = await axiosInstance.put(`/tasks`, data);
     return response.data;
