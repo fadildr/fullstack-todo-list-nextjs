@@ -1,13 +1,11 @@
 import React from "react";
 import { User } from "../types/user";
 import { StatusOptions } from "../constant/task";
-
+import { FormField } from "./FormField";
 type FiltersProps = {
   searchTerm: string;
   filterStatus: string;
   assignedUserId: number | undefined;
-  sortBy: string;
-  sortOrder: "asc" | "desc";
   users: User[];
   onFilterChange: (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -20,43 +18,50 @@ export const Filters: React.FC<FiltersProps> = ({
   assignedUserId,
   users,
   onFilterChange,
-}) => (
-  <div className="mb-4">
-    <div className="flex flex-wrap gap-4">
-      <input
-        type="text"
-        name="search"
-        placeholder="Search items..."
-        value={searchTerm}
-        onChange={onFilterChange}
-        className="flex-grow min-w-[200px] px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
-      <select
-        name="status"
-        value={filterStatus}
-        onChange={onFilterChange}
-        className="min-w-[150px] px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-      >
-        <option value="">All Status</option>
-        {StatusOptions.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
+}) => {
+  const formFields = [
+    {
+      name: "search",
+      type: "text",
+      value: searchTerm,
+      onChange: onFilterChange,
+      placeholder: "Search items...",
+    },
+    {
+      name: "status",
+      type: "select",
+      value: filterStatus,
+      onChange: onFilterChange,
+      placeholder: "All Status",
+      options: StatusOptions,
+    },
+    {
+      name: "assignedUserId",
+      type: "select",
+      value: assignedUserId,
+      onChange: onFilterChange,
+      placeholder: "All Users",
+      options: users.map((user) => ({
+        value: user.id,
+        label: user.name,
+      })),
+    },
+  ];
+  return (
+    <div className="mb-4">
+      <div className="flex flex-wrap gap-4">
+        {formFields.map((field) => (
+          <FormField
+            key={field.name}
+            type={field.type as any}
+            name={field.name}
+            value={field.value}
+            onChange={field.onChange}
+            placeholder={field.placeholder}
+            options={field.options}
+          />
         ))}
-      </select>
-      <select
-        name="assignedUserId"
-        value={assignedUserId || ""}
-        onChange={onFilterChange}
-        className="min-w-[150px] px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-      >
-        <option value="">All Users</option>
-        {users.map((user) => (
-          <option key={user.id} value={user.id}>
-            {user.name}
-          </option>
-        ))}
-      </select>
+      </div>
     </div>
-  </div>
-);
+  );
+};

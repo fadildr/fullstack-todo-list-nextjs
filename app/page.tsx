@@ -62,6 +62,7 @@ export default function Home() {
         assignedUserId: Number(itemData.assignedUserId),
         status: itemData.status,
         id: itemData.id,
+        userId: user.id,
       };
     } else {
       request = {
@@ -139,8 +140,6 @@ export default function Home() {
         searchTerm={filterParams.search}
         filterStatus={filterParams.status}
         assignedUserId={filterParams.assignedUserId}
-        sortBy={filterParams.sortBy}
-        sortOrder={filterParams.sortOrder}
         users={users}
         onFilterChange={handleFilterChange}
       />
@@ -169,9 +168,9 @@ export default function Home() {
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           >
             <line x1="12" y1="5" x2="12" y2="19"></line>
             <line x1="5" y1="12" x2="19" y2="12"></line>

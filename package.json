@@ -27,6 +27,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.54.2",
+    "webpack": "^5.97.1",
     "yup": "^1.6.1"
   },
   "devDependencies": {

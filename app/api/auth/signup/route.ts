@@ -5,11 +5,11 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 const SALT_ROUNDS = 10;
 const dummy = {
-  email: "lead@example.com",
+  email: "member@example.com",
   password: "securepassword",
-  name: "Test lead",
-  role: "lead",
-  role_id: 1,
+  name: "Test member",
+  role: "member",
+  role_id: 2,
 };
 export async function POST(req: Request) {
   const { email, password, name, role, role_id } = dummy;

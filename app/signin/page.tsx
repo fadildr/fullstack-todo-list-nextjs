@@ -20,6 +20,7 @@ export default function LoginPage() {
     handleSubmit,
     formState: { errors },
   } = useForm<FormData>();
+
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
@@ -31,117 +32,113 @@ export default function LoginPage() {
     type: "success" as "success" | "error",
   });
 
-  const onSubmit = async (data: FormData) => {
+  const forms = [
+    {
+      label: "Email",
+      id: "email",
+      type: "email",
+      validation: {
+        required: "Email harus diisi",
+        pattern: {
+          value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+          message: "Alamat email tidak valid",
+        },
+      },
+    },
+    {
+      label: "Password",
+      id: "password",
+      type: showPassword ? "text" : "password",
+      validation: { required: "Password harus diisi" },
+    },
+  ];
+
+  const handleLogin = async (data: FormData) => {
     setIsLoading(true);
     try {
-      const res: any = await login(data.email, data.password);
+      const res = await login(data.email, data.password);
       if (res.status === 200 && res.data.token) {
-        const decodedToken = jwt.decode(res.data.token) as any;
-
-        setUser(decodedToken.user);
+        const user = jwt.decode(res.data.token) as any;
+        setUser(user.user);
         Cookies.set("token", res.data.token, { path: "/", expires: 7 });
-        setModalState({
-          isOpen: true,
-          title: "Login Berhasil",
-          message: "Anda akan diarahkan ke halaman utama.",
-          type: "success",
-        });
-        setTimeout(() => {
-          router.push("/");
-        }, 2000);
+        showModal(
+          "Login Berhasil",
+          "Anda akan diarahkan ke halaman utama.",
+          "success"
+        );
+        setTimeout(() => router.push("/"), 2000);
       } else {
+        //@ts-ignore
         throw new Error(res.error || "Error logging in");
       }
     } catch (error) {
-      setModalState({
-        isOpen: true,
-        title: "Login Gagal",
-        message:
-          error instanceof Error
-            ? error.message
-            : "Terjadi kesalahan saat login",
-        type: "error",
-      });
+      showModal(
+        "Login Gagal",
+        error instanceof Error ? error.message : "Terjadi kesalahan saat login",
+        "error"
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
+  const showModal = (
+    title: string,
+    message: string,
+    type: "success" | "error"
+  ) => {
+    setModalState({ isOpen: true, title, message, type });
   };
 
-  const closeModal = () => {
+  const closeModal = () =>
     setModalState((prev) => ({ ...prev, isOpen: false }));
-  };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="w-full max-w-md bg-white rounded-lg shadow-md p-8">
         <h2 className="text-2xl font-bold text-center mb-6">Login</h2>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              placeholder="nama@example.com"
-              className={`w-full px-3 py-2 border rounded-md ${
-                errors.email ? "border-red-500" : "border-gray-300"
-              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-              {...register("email", {
-                required: "Email harus diisi",
-                pattern: {
-                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: "Alamat email tidak valid",
-                },
-              })}
-            />
-            {errors.email && (
-              <p className="mt-1 text-sm text-red-500">
-                {errors.email.message}
-              </p>
-            )}
-          </div>
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Password
-            </label>
-            <div className="relative">
-              <input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                className={`w-full px-3 py-2 border rounded-md ${
-                  errors.password ? "border-red-500" : "border-gray-300"
-                } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                {...register("password", { required: "Password harus diisi" })}
-              />
-              <button
-                type="button"
-                onClick={togglePasswordVisibility}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+        <form onSubmit={handleSubmit(handleLogin)} className="space-y-6">
+          {forms.map(({ label, id, type, validation }) => (
+            <div key={id}>
+              <label
+                htmlFor={id}
+                className="block text-sm font-medium text-gray-700 mb-1"
               >
-                {showPassword ? (
-                  <EyeOffIcon className="h-5 w-5" />
-                ) : (
-                  <EyeIcon className="h-5 w-5" />
+                {label}
+              </label>
+              <div className="relative">
+                <input
+                  id={id}
+                  type={type}
+                  className={`w-full px-3 py-2 border rounded-md ${
+                    errors[id as keyof FormData]
+                      ? "border-red-500"
+                      : "border-gray-300"
+                  } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  {...register(id as keyof FormData, validation)}
+                />
+                {id === "password" && (
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? (
+                      <EyeOffIcon className="h-5 w-5" />
+                    ) : (
+                      <EyeIcon className="h-5 w-5" />
+                    )}
+                  </button>
                 )}
-              </button>
+              </div>
+
+              {errors[id as keyof FormData] && (
+                <p className="mt-1 text-sm text-red-500">
+                  {errors[id as keyof FormData]?.message}
+                </p>
+              )}
             </div>
-            {errors.password && (
-              <p className="mt-1 text-sm text-red-500">
-                {errors.password.message}
-              </p>
-            )}
-          </div>
+          ))}
           <button
             type="submit"
             className={`w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${

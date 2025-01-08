@@ -8,32 +8,45 @@ generator client {
 }
 
 model User {
-  id         Int      @id @default(autoincrement())
-  email      String   @unique
-  password   String
-  role       String
-  role_id    Int
-  name       String   @default("") 
-  tasks      Task[]   @relation("CreatedTasks")
-  assignedTasks Task[] @relation("AssignedTasks")
-  created_at DateTime @default(now())
-  updated_at DateTime @default(now())
-}
+  id            Int       @id @default(autoincrement())
+  email         String    @unique
+  password      String
+  role          String
+  role_id       Int
+  name          String    @default("")
+  tasks         Task[]    @relation("CreatedTasks")
+  assignedTasks Task[]    @relation("AssignedTasks")
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @default(now())
+  activityLogs  ActivityLog[] @relation("UserActivityLogs")
 
+}
 
 model Task {
-  id           Int      @id @default(autoincrement())
-  title        String
-  description  String
-  status       Status   @default(NOT_STARTED)
-  assignedUser User?    @relation("AssignedTasks", fields: [assignedUserId], references: [id])  
+  id            Int           @id @default(autoincrement())
+  title         String
+  description   String
+  status        Status        @default(NOT_STARTED)
+  assignedUser  User?         @relation("AssignedTasks", fields: [assignedUserId], references: [id])
   assignedUserId Int?
-  created_by   User     @relation("CreatedTasks", fields: [createdById], references: [id]) 
-  createdById  Int
-  created_at   DateTime @default(now())
-  updated_at   DateTime @default(now()) @updatedAt
+  created_by    User          @relation("CreatedTasks", fields: [createdById], references: [id])
+  createdById   Int
+  created_at    DateTime      @default(now())
+  updated_at    DateTime      @default(now()) @updatedAt
+  activityLogs  ActivityLog[] @relation("TaskActivityLogs")
 }
 
+model ActivityLog {
+  id          Int      @id @default(autoincrement())
+  taskId      Int
+  userId      Int
+  field       String
+  beforeValue String
+  afterValue  String
+  updatedAt   DateTime @default(now())
+  task        Task     @relation("TaskActivityLogs", fields: [taskId], references: [id])
+  user        User     @relation("UserActivityLogs", fields: [userId], references: [id])  // Relasi dengan model User
+}
 
 enum Status {
   NOT_STARTED

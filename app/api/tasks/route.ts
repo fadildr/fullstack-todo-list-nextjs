@@ -142,6 +142,23 @@ export async function GET(req: Request) {
             name: true,
           },
         },
+        activityLogs: {
+          select: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+            field: true,
+            beforeValue: true,
+            afterValue: true,
+            updatedAt: true,
+          },
+          orderBy: {
+            updatedAt: "desc",
+          },
+        },
       },
     });
 
@@ -162,7 +179,7 @@ export async function GET(req: Request) {
       },
     });
   } catch (error: any) {
-    console.error("Error in GET tasks:", error);
+    console.log("Error in GET tasks:", error);
     return NextResponse.json(
       {
         status: error.code || 500,
@@ -176,7 +193,8 @@ export async function GET(req: Request) {
 
 export async function PUT(req: Request) {
   try {
-    const { id, title, description, status, assignedUserId } = await req.json();
+    const { id, title, description, status, assignedUserId, userId } =
+      await req.json();
 
     if (!id) {
       return NextResponse.json(
@@ -185,7 +203,10 @@ export async function PUT(req: Request) {
       );
     }
 
-    const existingTask = await prisma.task.findUnique({ where: { id } });
+    // Cari task yang ada berdasarkan ID
+    const existingTask = await prisma.task.findUnique({
+      where: { id },
+    });
     if (!existingTask) {
       return NextResponse.json(
         { error: `Task with ID ${id} not found` },
@@ -193,14 +214,53 @@ export async function PUT(req: Request) {
       );
     }
 
+    const updatedData: any = {};
+    const activityLogs: any[] = [];
+
+    // Menentukan perubahan dan mencatat aktivitas
+    if (title && title !== existingTask.title) {
+      updatedData.title = title;
+      activityLogs.push({
+        field: "title",
+        beforeValue: existingTask.title,
+        afterValue: title,
+      });
+    }
+
+    if (description && description !== existingTask.description) {
+      updatedData.description = description;
+      activityLogs.push({
+        field: "description",
+        beforeValue: existingTask.description,
+        afterValue: description,
+      });
+    }
+
+    if (status && status !== existingTask.status) {
+      updatedData.status = status;
+      activityLogs.push({
+        field: "status",
+        beforeValue: existingTask.status,
+        afterValue: status,
+      });
+    }
+
+    if (
+      assignedUserId !== undefined &&
+      assignedUserId !== existingTask.assignedUserId
+    ) {
+      updatedData.assignedUserId = assignedUserId;
+      activityLogs.push({
+        field: "assignedUserId",
+        beforeValue: existingTask.assignedUserId,
+        afterValue: assignedUserId,
+      });
+    }
+
+    // Update task di database
     const updatedTask = await prisma.task.update({
       where: { id },
-      data: {
-        title: title || existingTask.title,
-        description: description || existingTask.description,
-        status: status || existingTask.status,
-        assignedUserId: assignedUserId ?? existingTask.assignedUserId,
-      },
+      data: updatedData,
       include: {
         assignedUser: {
           select: {
@@ -210,6 +270,20 @@ export async function PUT(req: Request) {
         },
       },
     });
+
+    // Mencatat aktivitas ke ActivityLog
+    for (const log of activityLogs) {
+      await prisma.activityLog.create({
+        data: {
+          taskId: id,
+          userId: userId, // Misalkan ID user yang melakukan update
+          field: log.field,
+          beforeValue: log.beforeValue,
+          afterValue: log.afterValue,
+          updatedAt: new Date(),
+        },
+      });
+    }
 
     return NextResponse.json(
       {
